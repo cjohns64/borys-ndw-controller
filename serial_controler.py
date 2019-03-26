@@ -8,7 +8,6 @@ import io
 # Borys Lab Testing Computer
 # all ports COM3
 ser = serial.Serial(port="COM3", baudrate=57600, timeout=1.0)
-sio = io.TextIOWrapper(io.BufferedRWPair(ser, ser))
 
 def send_cmd(cmd):
     """
@@ -18,9 +17,9 @@ def send_cmd(cmd):
     :return: None
     """
     tmp = "\t" + cmd + "\n"
-    btmp = unicode(tmp, 'utf8')
-    sio.write(btmp)
-    sio.flush()
+    tmp = bytearray(tmp, 'ascii')
+    ser.write(tmp)
+    ser.flush()
 
 
 def ask_cmd(cmd):
@@ -29,16 +28,25 @@ def ask_cmd(cmd):
     :param cmd: command for the Arduino as a string
     :return: the response from the Arduino as a string
     """
-    sio.flushInput()
     send_cmd(cmd)
-    resp = str(sio.readline())
+    resp = ""
+    timeout = 6  # max number of loops before giving up
+    # wait for the responce
+    while len(resp) == 0 and timeout > 0:
+        resp = ser.readline().decode("utf-8")
+        timeout -= 1
+    if timeout <= 0:
+        print("timed out!")
+    else:
+        # get the second part since there should be to lines of output
+        resp += ser.readline().decode("utf-8")
     return str(resp)
 
 def test_loop():
     while True:
         print(">>" + ask_cmd("i10") + ">>\n")
-        time.sleep(3)
+        time.sleep(0.5)
         print("<<" + ask_cmd("o10") + "<<\n")
-        time.sleep(3)
+        time.sleep(0.5)
 
 test_loop()
