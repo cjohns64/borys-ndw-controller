@@ -10,11 +10,6 @@ import io
 ser = serial.Serial(port="COM3", baudrate=57600, timeout=1.0)
 sio = io.TextIOWrapper(io.BufferedRWPair(ser, ser))
 
-sio.write(unicode("hello\n"))
-sio.flush() # it is buffering. required to get the data out *now*
-hello = sio.readline()
-print(hello == unicode("hello\n"))
-
 def send_cmd(cmd):
     """
     Sends the given command to the Arduino,
@@ -23,8 +18,9 @@ def send_cmd(cmd):
     :return: None
     """
     tmp = "\t" + cmd + "\n"
-    btmp = bytearray(tmp, 'utf8')
-    ser.write(btmp)
+    btmp = unicode(tmp, 'utf8')
+    sio.write(btmp)
+    sio.flush()
 
 
 def ask_cmd(cmd):
@@ -33,10 +29,9 @@ def ask_cmd(cmd):
     :param cmd: command for the Arduino as a string
     :return: the response from the Arduino as a string
     """
-    ser.flushInput()
+    sio.flushInput()
     send_cmd(cmd)
-    time.sleep(0.5)
-    resp = str(ser.readline())
+    resp = str(sio.readline())
     return str(resp)
 
 def test_loop():
