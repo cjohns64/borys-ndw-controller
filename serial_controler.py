@@ -1,13 +1,19 @@
 import serial
 import time
+import io
+# macbook pro:
 # right port /dev/cu.usbmodem1421
 # left port /dev/cu.usbmodem1411
-ser = serial.Serial(port="/dev/cu.usbmodem1411", baudrate=9600, timeout=1.0)
-time.sleep(1)
-ser.flushInput()
-time.sleep(0.1)
-print(ser.readline())
 
+# Borys Lab Testing Computer
+# all ports COM3
+ser = serial.Serial(port="COM3", baudrate=57600, timeout=1.0)
+sio = io.TextIOWrapper(io.BufferedRWPair(ser, ser))
+
+sio.write(unicode("hello\n"))
+sio.flush() # it is buffering. required to get the data out *now*
+hello = sio.readline()
+print(hello == unicode("hello\n"))
 
 def send_cmd(cmd):
     """
@@ -27,14 +33,17 @@ def ask_cmd(cmd):
     :param cmd: command for the Arduino as a string
     :return: the response from the Arduino as a string
     """
+    ser.flushInput()
     send_cmd(cmd)
-    time.sleep(0.01)
-    resp = ser.readline()
+    time.sleep(0.5)
+    resp = str(ser.readline())
     return str(resp)
 
 def test_loop():
     while True:
-        ask_cmd("i10")
-        time.sleep(0.5)
-        ask_cmd("o10")
-        time.sleep(1)
+        print(">>" + ask_cmd("i10") + ">>\n")
+        time.sleep(3)
+        print("<<" + ask_cmd("o10") + "<<\n")
+        time.sleep(3)
+
+test_loop()
