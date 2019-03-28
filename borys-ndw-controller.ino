@@ -14,7 +14,7 @@ char intoRotate = 'i';
 char outofRotate = 'o';
 boolean inputDone = 0;
 
-boolean DEBUG = true;
+boolean DEBUG = false;
 int LED1 = 2;  // led for being in the inputDone section
 int LED2 = 3;  // led for being in the serialEvent section
 int LED3 = 4;  // led for useing stepper motor
@@ -115,13 +115,13 @@ void serial_read() {
     if (start_input >= 0){
       // we have both the start and end chars, so the input is valid
       inputString = inputString.substring(start_input, end_input);
-      Serial.println("Valid Input");
+      //Serial.println("Valid Input");
       // command stepper to move
       move_stepper();
     }
     else {
       // input is not valid
-      Serial.println("Invalid Input");
+      //Serial.println("Invalid Input");
       inputString = "";
     }
   }

@@ -9,37 +9,40 @@ import io
 # all ports COM3
 ser = serial.Serial(port="COM3", baudrate=57600, timeout=1.0)
 
-def receiving():
+def ask_cmd(cmd):
     global last_received
     send_open = True
     last_time = time.process_time()
-
+    message_sent = False
     buffer_string = ''
-    while True:
+    
+    while not message_sent:
+        # try to read the next char, ignore faulty ones
         try:
             buffer_string = buffer_string + ser.read(ser.inWaiting()).decode("ascii")
         except UnicodeDecodeError:
             buffer_string = buffer_string + ""
-        
+
+        # send a cmd if input is empty
         if send_open and len(buffer_string) == 0:
-            send_cmd("i100")
+            send_cmd(cmd)
             print("sent")
             send_open = False
             last_time = time.process_time()
-        
+            
+        # allow another try after some seconds
         if time.process_time() - last_time > 3:
             send_open = True
             last_time = time.process_time()
-            
+
+        # read in the string from the Aduino 
         if '\n' in buffer_string:
             lines = buffer_string.split('\n') # Guaranteed to have at least 2 entries
             if lines[-2]: last_received = lines[-2]
             print(last_received)
-            #If the Arduino sends lots of empty lines, you'll lose the
-            #last filled line, so you could make the above statement conditional
-            #like so: if lines[-2]: last_received = lines[-2]
             buffer_string = lines[-1]
             send_open = True
+            message_sent = True;
 
 def send_cmd(cmd):
     """
@@ -53,4 +56,3 @@ def send_cmd(cmd):
     ser.write(tmp)
     #ser.flush()
 
-receiving()
