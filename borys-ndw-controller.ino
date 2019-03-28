@@ -34,51 +34,53 @@ void setup() {
   // initialize to the byte-rate of 57600 -- must be the same as the Python controller
   Serial.begin(57600);
   // wait until serial port is available
-  while (Serial.available() == 0){ }
+  //while (Serial.available() == 0){ }
 }
 
 void loop() {
+  serial_read();
+}
+
+void move_stepper(){
+//  inputDone = true;
+//  inputString = "o10";
+  
   if (inputDone) {
-    if (DEBUG){
-      digitalWrite(LED1, HIGH);
-      delay(100);
-    }
+    if (DEBUG){digitalWrite(LED1, HIGH); delay(100);}
+    
     if (motorSpeed > 0) {
-      // index of the command identifiers
+      // get index of the command identifiers
       // the index will be -1 if the string does not exist in the input
       int intoIndex = inputString.indexOf(intoRotate);
       int outofIndex = inputString.indexOf(outofRotate);
       int steps = 0;
       String inputStepsStr = "0";
-      Serial.print("  in:"+inputString+";");
-      
+      Serial.print("in:"+inputString+";");
+
+      // set steps value
       if (intoIndex >= 0){
         // get number of steps in the into direction
         inputStepsStr = inputString.substring(intoIndex + 1);
         steps = inputStepsStr.toInt();
+        steps = -steps;  // fix the direction
       }
       else if (outofIndex >= 0) {
         // get number of steps in the outof direction
         inputStepsStr = inputString.substring(outofIndex + 1);
         steps = inputStepsStr.toInt();
-        steps = -steps;  // fix the direction
       }
       else {
         Serial.println("no direction");
       }
       
       if (steps != 0){
-        if (DEBUG) {
-          digitalWrite(LED3, HIGH);
-          delay(100);
-        }
+        if (DEBUG) {digitalWrite(LED3, HIGH); delay(100);}
+        
         // take the determined number of stepps
         // program will wait for the task to finish before proceding
         motor.step(steps);
-        Serial.println("steping" + steps);
-        if (DEBUG) {
-          digitalWrite(LED3, LOW);
-        }
+        Serial.println("steping" + String(steps) + ";");
+        if (DEBUG) {digitalWrite(LED3, LOW);}
       }
       else {
         Serial.println("not stepping");
@@ -88,59 +90,44 @@ void loop() {
       Serial.println("motor off");
     }
     // reset for next input
-    inputDone = 0;
+    inputDone = false;
     inputString = "";
   }
-  delay(10);
-  if (DEBUG) {
-    digitalWrite(LED1, LOW);
+  if (DEBUG) {digitalWrite(LED1, LOW);}
+}
+
+void serial_read() {
+  if (DEBUG) {digitalWrite(LED2, HIGH);}
+  // read in the input stream
+  inputString = Serial.readString();
+  if (inputString.length() > 0) {
+    if (DEBUG) {digitalWrite(LED4, HIGH); delay(100);}
+    // line done
+    inputDone = true;
+    // cut out extra and check for valid start and end chars
+    int start_input = inputString.indexOf('\t');
+    // windows newline is \r\n but mac and linux is \n
+    int end_input = inputString.indexOf('\r');
+    if (end_input < 0){
+      // no windows newline, check for linux
+      end_input = inputString.indexOf('\n');
+    }
+    if (start_input >= 0){
+      // we have both the start and end chars, so the input is valid
+      inputString = inputString.substring(start_input, end_input);
+      Serial.println("Valid Input");
+      // command stepper to move
+      move_stepper();
+    }
+    else {
+      // input is not valid
+      Serial.println("Invalid Input");
+      inputString = "";
+    }
   }
+  if (DEBUG) {digitalWrite(LED2, LOW); digitalWrite(LED4, LOW);}
 }
 
 void serialEvent() {
-  if (DEBUG) {
-    digitalWrite(LED2, HIGH);
-    delay(100);
-  }
-  while (Serial.available()){
-    if (DEBUG) {
-      digitalWrite(LED4, HIGH);
-      delay(100);
-    }
-    // read in the input stream
-    char inChar = char(Serial.read());
-    Serial.print("char" + inChar);
-    if (inChar != '\n' || inChar != '\r'){
-      // not done with the line
-      inputString.concat(inChar);
-    }
-    else if (inputString.length() > 0) {
-      // line done
-      inputDone = 1;
-      int startIndex = inputString.indexOf('\t');
-      
-      // cut out extra and check for valid start and end chars
-      int start_input = inputString.indexOf('\t');
-      // windows newline is \r\n but mac and linux is \n
-      int end_input = inputString.indexOf('\r');
-      if (end_input < 0){
-        // no windows newline, check for linux
-        end_input = inputString.indexOf('\n');
-      }
-      if (start_input >= 0 && end_input >= 0){
-        // we have both the start and end chars, so the input is valid
-        inputString = inputString.substring(start_input, end_input);
-        Serial.print("!!Valid Input!!");
-      }
-      else {
-        // input is not valid
-        Serial.print("!!Invalid Input!!");
-        inputString = "";
-      }
-    }
-  }
-  if (DEBUG) {
-    digitalWrite(LED2, LOW);
-    digitalWrite(LED4, LOW);
-  }
+  
 }
