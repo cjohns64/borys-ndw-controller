@@ -1,9 +1,9 @@
 /*
- * Program for rotating the stepper motor in a direction and amount given my ScopeFoundry
+ * Program for rotating the stepper motor in a direction and amount given by ScopeFoundry
  */
 #include <Stepper.h>
 int stepsPerRevolution = 400;
-int motorSpeed = 10;
+int motorSpeed = 10;  // speed the motor turns, int from 0 to 100
 String StepString = "step";
 // initialize the stepper library on pins 8 through 11:
 Stepper motor(stepsPerRevolution, 8, 9, 10, 11);
@@ -14,6 +14,7 @@ char intoRotate = 'i';
 char outofRotate = 'o';
 boolean inputDone = 0;
 
+// debugging settings
 boolean DEBUG = false;
 int LED1 = 2;  // led for being in the inputDone section
 int LED2 = 3;  // led for being in the serialEvent section
@@ -33,21 +34,19 @@ void setup() {
   // start the serial port, 
   // initialize to the byte-rate of 57600 -- must be the same as the Python controller
   Serial.begin(57600);
-  // wait until serial port is available
-  //while (Serial.available() == 0){ }
 }
 
 void loop() {
+  // always listen for input
   serial_read();
 }
 
 void move_stepper(){
-//  inputDone = true;
-//  inputString = "o10";
-  
+  // if we have a compleat input
   if (inputDone) {
     if (DEBUG){digitalWrite(LED1, HIGH); delay(100);}
-    
+
+    // if the motor has a non-zero speed, this is because the program will suspend until the motor has compleated the rotation
     if (motorSpeed > 0) {
       // get index of the command identifiers
       // the index will be -1 if the string does not exist in the input
@@ -55,6 +54,7 @@ void move_stepper(){
       int outofIndex = inputString.indexOf(outofRotate);
       int steps = 0;
       String inputStepsStr = "0";
+      // notify the controler of the interpreted input
       Serial.print("in:"+inputString+";");
 
       // set steps value
@@ -70,10 +70,12 @@ void move_stepper(){
         steps = inputStepsStr.toInt();
       }
       else {
+        // no direction was found in the input
         Serial.println("no direction");
       }
       
       if (steps != 0){
+        // we got a direction and number of steps to take
         if (DEBUG) {digitalWrite(LED3, HIGH); delay(100);}
         
         // take the determined number of stepps
@@ -83,10 +85,12 @@ void move_stepper(){
         if (DEBUG) {digitalWrite(LED3, LOW);}
       }
       else {
+        // we did not get a step number
         Serial.println("not stepping");
       }
     }
     else {
+      // no input, motor waiting
       Serial.println("motor off");
     }
     // reset for next input
@@ -98,10 +102,13 @@ void move_stepper(){
 
 void serial_read() {
   if (DEBUG) {digitalWrite(LED2, HIGH);}
+  
   // read in the input stream
   inputString = Serial.readString();
+  
   if (inputString.length() > 0) {
     if (DEBUG) {digitalWrite(LED4, HIGH); delay(100);}
+    
     // line done
     inputDone = true;
     // cut out extra and check for valid start and end chars
@@ -115,13 +122,11 @@ void serial_read() {
     if (start_input >= 0){
       // we have both the start and end chars, so the input is valid
       inputString = inputString.substring(start_input, end_input);
-      //Serial.println("Valid Input");
       // command stepper to move
       move_stepper();
     }
     else {
       // input is not valid
-      //Serial.println("Invalid Input");
       inputString = "";
     }
   }
@@ -129,5 +134,5 @@ void serial_read() {
 }
 
 void serialEvent() {
-  
+  // pass
 }
