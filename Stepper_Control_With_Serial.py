@@ -70,3 +70,17 @@ class ArduinoCom:
         tmp = bytearray(tmp, 'ascii')
         # send
         self.ser.write(tmp)
+
+    def set_speed(self, speed):
+        """
+        Tells the Arduino to set the motor speed to a value between 0 and 100,
+        where 100 is the max speed and 0 is not moving
+        :param speed: int value the motor speed should be set to
+        :return: None
+        """
+        if speed < 0:
+            self.ask_cmd("s0")
+        elif speed > 100:
+            self.ask_cmd("s100")
+        else:
+            self.ask_cmd("s" + str(speed))

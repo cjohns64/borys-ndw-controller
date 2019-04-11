@@ -1,51 +1,44 @@
 '''
-Created on Sep 23, 2014
+Created on 21.09.2014, Modified on 11.04.2019
 
-@author: Benedikt 
+@authors: Benedikt Ursprung, modified for use in Borys' Lab by Zoe Noble and Cory Johns
 '''
 from ScopeFoundry import HardwareComponent
 import time
 
 try:
-    from reference.power_wheel_arduino_dev import PowerWheelArduino
+    from Stepper_Control_With_Serial import ArduinoCom
 except Exception as err:
-    print("Cannot load required modules for arduino power wheel:", err)
+    print("Cannot load required modules from stepper motor control file:", err)
 
 
-class PowerWheelArduinoHW(HardwareComponent):
+class NdwHardwareComponent(HardwareComponent):
     
-    name = 'power_wheel_arduino'
-    debug = False
+    name = 'NDW_HardwareComponent'
     
     def setup(self):
-        self.debug = True
-
-        # logged quantity        
-        self.encoder_pos = self.add_logged_quantity('encoder_pos', dtype=int, unit='steps', ro=True)
-        self.move_steps  = self.add_logged_quantity('move_steps',  dtype=int, unit='steps', vmin=1, vmax=3200, initial=10, ro=False)
-        self.ser_port = self.add_logged_quantity('ser_port', dtype=str, initial='COM1')
+        # logged quantity
+        self.steps  = self.add_logged_quantity('step_size',  dtype=int, unit='steps', vmin=1, vmax=3200, initial=10, ro=False)
+        self.ser_port = self.add_logged_quantity('ser_port', dtype=str, initial='COM3')
 
         #  operations
-        self.add_operation("zero_encoder", self.zero_encoder)
-        self.add_operation("move_fwd", self.move_fwd)
-        self.add_operation("move_bkwd", self.move_bkwd)
+        self.add_operation("move_greater_intensity", self.move_greater_intensity)
+        self.add_operation("move_lesser_intensity", self.move_lesser_intensity)
 
     def connect(self):
-                
-        if self.debug: print("connecting to arduino power wheel")
+        if self.debug_mode.val: print("connecting to Arduino stepper control")
         
         # Open connection to hardware
-        self.power_wheel_dev = PowerWheelArduino(port=self.ser_port.val, debug=self.debug_mode.val)
-        self.power_wheel_dev.write_speed(50)
+        self.stepper_ctrl = ArduinoCom(port=self.ser_port.val, DEBUG=self.debug_mode.val)
+        self.stepper_ctrl.write_speed(50)
         
         # connect logged quantities
         self.encoder_pos.hardware_set_func = self.power_wheel_dev.write_steps
         self.encoder_pos.hardware_read_func= self.power_wheel_dev.read_encoder
 
-        print('connected to ',self.name)
+        print('connected to ', self.name)
 
     def disconnect(self):
-
         # disconnect logged quantities from hardware
         for lq in self.settings.as_list():
             lq.hardware_read_func = None
@@ -58,32 +51,12 @@ class PowerWheelArduinoHW(HardwareComponent):
             # clean up hardware object
             del self.power_wheel_dev
         
-        print('disconnected ',self.name)
+        print('disconnected ', self.name)
         
     # @QtCore.Slot()
-    def move_fwd(self):
-        # self.power_wheel_dev.write_steps(self.move_steps.val)
-        self.power_wheel_dev.write_steps_and_wait(self.move_steps.val)
-        time.sleep(0.2)
-        # TODO really should wait until done
-        self.power_wheel_dev.read_status()
-        self.encoder_pos.read_from_hardware()
+    def move_greater_intensity(self):
+        self.stepper_ctrl.ask_cmd("o" + str(self.steps))
         
     # @QtCore.Slot()
-    def move_bkwd(self):
-        self.power_wheel_dev.write_steps_and_wait(-1 * self.move_steps.val)
-        time.sleep(0.2)
-        # TODO really should wait until done
-
-        self.encoder_pos.read_from_hardware()
-
-    def zero_encoder(self):
-        self.power_wheel_dev.write_zero_encoder()
-        self.encoder_pos.read_from_hardware()
-
-    def move_relative(self, d_steps):
-        self.power_wheel_dev.write_steps_and_wait(d_steps)
-        time.sleep(0.2)
-        # TODO really should wait until done
-
-        self.encoder_pos.read_from_hardware()
+    def move_lesser_intensity(self):
+        self.stepper_ctrl.ask_cmd("i" + str(self.steps))
