@@ -11,6 +11,8 @@ class ArduinoCom:
         # Borys Lab Testing Computer
         # all ports COM3
         self.last_received = ""
+        self.location = 0
+        self.steps_per_rev = 400
         self.ser = serial.Serial(port=port, baudrate=baudrate, timeout=timeout)
         self.DEBUG = DEBUG
 
@@ -52,6 +54,13 @@ class ArduinoCom:
                 lines = buffer_string.split('\n')  # Guaranteed to have at least 2 entries
                 if lines[-2]: self.last_received = lines[-2]
                 if self.DEBUG: print(self.last_received)
+                # if we steped update step location
+                if self.last_received.__contains__("steping"):
+                    i0 = self.last_received.index("steping") + 7
+                    i1 = self.last_received[i0:].index(";")
+                    self.location += int(self.last_received[i0:i1])
+                    # wrap at total number of steps in a revolution
+                    self.location %= self.steps_per_rev
                 buffer_string = lines[-1]
                 # we got the response, enable the next command
                 send_open = True
