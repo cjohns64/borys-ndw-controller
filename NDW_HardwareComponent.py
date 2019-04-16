@@ -29,7 +29,7 @@ class NdwHardwareComponent(HardwareComponent):
         if self.debug_mode.val: print("connecting to Arduino stepper control")
         
         # Open connection to hardware
-        self.stepper_ctrl = ArduinoCom(port=self.ser_port.val, DEBUG=self.debug_mode.val)
+        self.stepper_ctrl = ArduinoCom(port=self.ser_port.val, debug=self.debug_mode.val)
         self.stepper_ctrl.write_speed(50)
         
         # connect logged quantities

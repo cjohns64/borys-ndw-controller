@@ -7,20 +7,21 @@ class ArduinoCom:
     Class for handling sending commands to the Arduino and printing the response
     """
 
-    def __init__(self, port="COM3", baudrate=57600, timeout=1.0, DEBUG=False):
+    def __init__(self, port="COM3", baudrate=57600, timeout=1.0, debug=False):
         # Borys Lab Testing Computer
         # all ports COM3
         self.last_received = ""
         self.location = 0
         self.steps_per_rev = 400
         self.ser = serial.Serial(port=port, baudrate=baudrate, timeout=timeout)
-        self.DEBUG = DEBUG
+        self.debug = debug
 
     def ask_cmd(self, cmd, response_timeout=2):
         """
         sends the given command to the Arduino and waits for the response.
         if a response is not given within the response_timeout, resend the command and repeat
-        :param cmd: the command as a string to send to the Arduino ("i" for into motor / "o" for out of motor directions)
+        :param cmd: the command as a string to send to the Arduino
+        ("i" for into motor / "o" for out of motor directions)
         :param response_timeout: time in seconds to wait for the response
         :return:
         """
@@ -39,7 +40,7 @@ class ArduinoCom:
             # send a cmd if response is empty, and we are allowed to
             if send_open and len(buffer_string) == 0:
                 self.send_cmd(cmd)
-                if self.DEBUG: print("sent")
+                if self.debug: print("sent")
                 # disable sending while waiting for response
                 send_open = False
                 last_time = time.process_time()
@@ -53,10 +54,10 @@ class ArduinoCom:
             if '\n' in buffer_string:
                 lines = buffer_string.split('\n')  # Guaranteed to have at least 2 entries
                 if lines[-2]: self.last_received = lines[-2]
-                if self.DEBUG: print(self.last_received)
-                # if we steped update step location
-                if self.last_received.__contains__("steping"):
-                    i0 = self.last_received.index("steping") + 7
+                if self.debug: print(self.last_received)
+                # if we stepped update step location
+                if self.last_received.__contains__("stepping"):
+                    i0 = self.last_received.index("stepping") + 7
                     i1 = self.last_received[i0:].index(";")
                     self.location += int(self.last_received[i0:i1])
                     # wrap at total number of steps in a revolution

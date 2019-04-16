@@ -5,7 +5,7 @@
 int stepsPerRevolution = 400;
 int motorSpeed = 10;
 String StepString = "step";
-// initialize the stepper library on pins 8 through 11:
+// Initialize the stepper library on pins 8 through 11:
 Stepper motor(stepsPerRevolution, 8, 9, 10, 11);
 
 // the string used for serial input
@@ -18,7 +18,7 @@ boolean inputDone = 0;
 boolean DEBUG = false;
 int LED1 = 2;  // led for being in the inputDone section
 int LED2 = 3;  // led for being in the serialEvent section
-int LED3 = 4;  // led for useing stepper motor
+int LED3 = 4;  // led for using stepper motor
 int LED4 = 5;  // led for reading input
 
 void setup() {
@@ -78,10 +78,10 @@ void move_stepper(){
       if (steps != 0){
         if (DEBUG) {digitalWrite(LED3, HIGH); delay(100);}
         
-        // take the determined number of stepps
-        // program will wait for the task to finish before proceding
+        // take the determined number of steps
+        // program will wait for the task to finish before proceeding
         motor.step(steps);
-        Serial.println("steping" + String(steps) + ";");
+        Serial.println("stepping" + String(steps) + ";");
         if (DEBUG) {digitalWrite(LED3, LOW);}
       }
       else {
