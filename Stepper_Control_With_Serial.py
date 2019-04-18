@@ -56,9 +56,10 @@ class ArduinoCom:
                 if lines[-2]: self.last_received = lines[-2]
                 if self.debug: print(self.last_received)
                 # if we stepped update step location
-                if self.last_received.__contains__("stepping"):
-                    i0 = self.last_received.index("stepping") + 7
-                    i1 = self.last_received[i0:].index(";")
+                if self.last_received.__contains__("stepping") and not self.last_received.__contains__("not stepping"):
+                    i0 = self.last_received.index("stepping") + 8
+                    i1 = self.last_received[i0:].index(";") + i0
+                    print(self.last_received, i0, i1)
                     self.location += int(self.last_received[i0:i1])
                     # wrap at total number of steps in a revolution
                     self.location %= self.steps_per_rev
@@ -94,3 +95,5 @@ class ArduinoCom:
             self.ask_cmd("s100")
         else:
             self.ask_cmd("s" + str(speed))
+
+x = ArduinoCom(debug=True)
