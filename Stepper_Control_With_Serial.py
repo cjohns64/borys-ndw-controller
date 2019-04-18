@@ -10,8 +10,8 @@ class ArduinoCom:
     def __init__(self, port="COM3", baudrate=57600, timeout=1.0, debug=False):
         # Borys Lab Testing Computer
         # all ports COM3
-        self.last_received = ""
-        self.location = 0
+        self.last_received = ""  # last response received from the Arduino
+        self.location = 0  # current step location of the motor
         self.steps_per_rev = 400
         self.ser = serial.Serial(port=port, baudrate=baudrate, timeout=timeout)
         self.debug = debug
