@@ -1,0 +1,9 @@
+2019-04-18T11:58:50|CRITICAL|root|Unhandled exception:Traceback (most recent call last):
+  File "C:\Users\borys\Documents\Test Microscope\ScopeFoundry\hardware.py", line 215, in enable_connection
+    raise err
+  File "C:\Users\borys\Documents\Test Microscope\ScopeFoundry\hardware.py", line 205, in enable_connection
+    self.connect()
+  File "C:\Users\borys\Documents\Test Microscope\arduino_stepper_controller\NDW_HardwareComponent.py", line 41, in connect
+    read_func = self.stepper_ctrl.read_current_position,
+AttributeError: 'ArduinoCom' object has no attribute 'read_current_position'
+

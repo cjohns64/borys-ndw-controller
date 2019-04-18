@@ -1,0 +1,22 @@
+2019-04-18T11:43:13|CRITICAL|root|Unhandled exception:Traceback (most recent call last):
+  File "C:\Users\borys\Documents\Test Microscope\ScopeFoundry\hardware.py", line 215, in enable_connection
+    raise err
+  File "C:\Users\borys\Documents\Test Microscope\ScopeFoundry\hardware.py", line 205, in enable_connection
+    self.connect()
+  File "C:\Users\borys\Documents\Test Microscope\arduino_stepper_controller\NDW_HardwareComponent.py", line 36, in connect
+    self.stepper_ctrl = ArduinoCom(port=self.ser_port.val, debug=self.debug_mode.val)
+  File "C:\Users\borys\Documents\Test Microscope\arduino_stepper_controller\Stepper_Control_With_Serial.py", line 16, in __init__
+    self.ser = serial.Serial(port=port, baudrate=baudrate, timeout=timeout)
+  File "C:\Users\borys\Anaconda3\lib\site-packages\serial\serialwin32.py", line 31, in __init__
+    super(Serial, self).__init__(*args, **kwargs)
+  File "C:\Users\borys\Anaconda3\lib\site-packages\serial\serialutil.py", line 240, in __init__
+    self.open()
+  File "C:\Users\borys\Anaconda3\lib\site-packages\serial\serialwin32.py", line 62, in open
+    raise SerialException("could not open port {!r}: {!r}".format(self.portstr, ctypes.WinError()))
+serial.serialutil.SerialException: could not open port 'COM3': FileNotFoundError(2, 'The system cannot find the file specified.', None, 2)
+
+2019-04-18T11:57:06|CRITICAL|root|Unhandled exception:Traceback (most recent call last):
+  File "C:\Users\borys\Documents\Test Microscope\ScopeFoundry\helper_funcs.py", line 143, in eventFilter
+    def eventFilter(self, obj, event):
+KeyboardInterrupt
+

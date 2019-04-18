@@ -1,0 +1,13 @@
+2019-04-18T11:57:21|CRITICAL|root|Unhandled exception:Traceback (most recent call last):
+  File "C:\Users\borys\Documents\Test Microscope\ScopeFoundry\hardware.py", line 215, in enable_connection
+    raise err
+  File "C:\Users\borys\Documents\Test Microscope\ScopeFoundry\hardware.py", line 205, in enable_connection
+    self.connect()
+  File "C:\Users\borys\Documents\Test Microscope\arduino_stepper_controller\NDW_HardwareComponent.py", line 37, in connect
+    self.stepper_ctrl.set_speed(50)
+  File "C:\Users\borys\Documents\Test Microscope\arduino_stepper_controller\Stepper_Control_With_Serial.py", line 97, in set_speed
+    self.ask_cmd("s" + str(speed))
+  File "C:\Users\borys\Documents\Test Microscope\arduino_stepper_controller\Stepper_Control_With_Serial.py", line 36, in ask_cmd
+    buffer_string = buffer_string + self.ser.read(self.ser.inWaiting()).decode("ascii")
+AttributeError: 'ArduinoCom' object has no attribute 'ser'
+
