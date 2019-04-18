@@ -10,8 +10,8 @@ Stepper motor(stepsPerRevolution, 8, 9, 10, 11);
 
 // the string used for serial input
 String inputString = "";
-char intoRotate = 'i';
-char outofRotate = 'o';
+String intoRotate = "step-";
+String outofRotate = "step";
 char speedIndicator = 's';
 boolean inputDone = 0;
 
@@ -58,14 +58,14 @@ void move_stepper(){
 
       // set steps value
       if (intoIndex >= 0){
-        // get number of steps in the into direction
-        inputStepsStr = inputString.substring(intoIndex + 1);
+        // get number of steps in the negative direction
+        inputStepsStr = inputString.substring(intoIndex + 5);
         steps = inputStepsStr.toInt();
         steps = -steps;  // fix the direction
       }
       else if (outofIndex >= 0) {
-        // get number of steps in the outof direction
-        inputStepsStr = inputString.substring(outofIndex + 1);
+        // get number of steps in the positive direction
+        inputStepsStr = inputString.substring(outofIndex + 4);
         steps = inputStepsStr.toInt();
       }else if (speedIndex >= 0) {
         String inputSpeedStr = inputString.substring(speedIndex + 1);

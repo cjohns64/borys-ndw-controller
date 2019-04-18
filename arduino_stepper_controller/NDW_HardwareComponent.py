@@ -4,7 +4,6 @@ Created on 21.09.2014, Modified on 11.04.2019
 @authors: Benedikt Ursprung, modified for use in Borys' Lab by Zoe Noble and Cory Johns
 '''
 from ScopeFoundry import HardwareComponent
-import time
 
 try:
     from .Stepper_Control_With_Serial import ArduinoCom
@@ -18,47 +17,47 @@ class NdwHardwareComponent(HardwareComponent):
     
     def setup(self):
         # logged quantity
-        self.steps = self.add_logged_quantity('step_size',  dtype=int, unit='steps', vmin=1, vmax=3200, initial=10, ro=False)
         self.ser_port = self.add_logged_quantity('ser_port', dtype=str, initial='COM3')
-        # TODO does not wrap back to 0 at 400
-        self.step_position = self.add_logged_quantity('step_position', dtype=int, unit='steps', vmin=0, vmax=399)
+        self.step_position = self.add_logged_quantity('step_position', dtype=int, unit='steps')
 
         #  operations
         self.add_operation("move_greater_intensity", self.move_greater_intensity)
         self.add_operation("move_lesser_intensity", self.move_lesser_intensity)
         self.add_operation("set_motor_zero", self.set_motor_zero)
-        self.add_operation("move_to_location", self.move_to_location)
 
     def connect(self):
         if self.debug_mode.val: print("connecting to Arduino stepper control")
         
         # Open connection to hardware
-        self.stepper_ctrl = ArduinoCom(port=self.ser_port.val, debug=self.debug_mode.val)
-        #self.stepper_ctrl.set_speed(50)
+        self.stepper_ctrl = ArduinoCom(debug=self.debug_mode.val)
+        self.stepper_ctrl.set_speed(1)
         
         # connect logged quantities
+        # connect to set/read step position
         self.settings.step_position.connect_to_hardware(
            read_func = self.stepper_ctrl.read_current_position,
            write_func = self.stepper_ctrl.set_position
            )
-        
-        # TODO empty
+        # connect to set/read serial port
+        self.settings.ser_port.connect_to_hardware(
+            read_func = self.stepper_ctrl.read_port,
+            write_func = self.stepper_ctrl.start_connection
+            )
 
         print('connected to ', self.name)
 
     def disconnect(self):
-        # TODO disconnect from what was connected
         # disconnect logged quantities from hardware
         for lq in self.settings.as_list():
             lq.hardware_read_func = None
             lq.hardware_set_func = None
     
-        if hasattr(self, 'power_wheel_dev'):
+        if hasattr(self, 'stepper_ctrl'):
             # disconnect hardware
-            self.power_wheel_dev.close()
+            self.stepper_ctrl.close()
             
             # clean up hardware object
-            del self.power_wheel_dev
+            del self.stepper_ctrl
         
         print('disconnected ', self.name)
         
@@ -87,19 +86,3 @@ class NdwHardwareComponent(HardwareComponent):
         """
         self.stepper_ctrl.location = 0
 
-    def move_to_location(self, step_to):
-        """
-        Move the NDW to the given location, relative to the 0 steps position
-        :param step_to: the step location to move to, must be from 0 to 400, where 0 and 400 correspond to no motion
-        :return: None
-        """
-        # find difference
-        move = abs(step_to - self.stepper_ctrl.location) % 400
-        # correct if taking the long way around
-        if move > self.stepper_ctrl.steps_per_rev // 2:
-            move -= self.stepper_ctrl.steps_per_rev
-        # correct direction of move for current location at higher value then wanted location
-        if step_to < self.stepper_ctrl.location:
-            self.move_lesser_intensity(move)
-        else:
-            self.move_greater_intensity(move)

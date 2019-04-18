@@ -7,23 +7,46 @@ class ArduinoCom(object):
     Class for handling sending commands to the Arduino and printing the response
     """
 
-    def __init__(self, port="COM3", baudrate=57600, timeout=1.0, debug=False):
+    def __init__(self, baudrate=57600, ser_timeout=1.0, debug=False):
         # Borys Lab Testing Computer
         # all ports COM3
+        self.ser_timeout = ser_timeout
+        self.baudrate = baudrate
         self.last_received = ""  # last response received from the Arduino
         self.location = 0  # current step location of the motor
         self.steps_per_rev = 400
-        #self.ser = serial.Serial(port=port, baudrate=baudrate, timeout=timeout)
         self.debug = debug
+        self.port = "COM3"
+
+    def start_connection(self, port="COM3"):
+        """
+        Opens a serial connection to the Arduino
+        :param port: The name of the port to use
+        :return: None
+        """
+        # Borys Lab Testing Computer
+        # all ports COM3
+        self.port = port
+        self.ser = serial.Serial(port=port, baudrate=self.baudrate, timeout=self.ser_timeout)
+
+    def read_port(self):
+        return self.port
+
+    def close(self):
+        """
+        Closes the serial communication
+        :return: None
+        """
+        self.ser.close()
 
     def ask_cmd(self, cmd, response_timeout=2):
         """
         sends the given command to the Arduino and waits for the response.
-        if a response is not given within the response_timeout, resend the command and repeat
+        if a response is not given within the response_timeout, report the failure
         :param cmd: the command as a string to send to the Arduino
-        ("i" for into motor / "o" for out of motor directions)
+        ("i" (-∆intensity) for into motor / "o" (+∆intensity) for out of motor directions)
         :param response_timeout: time in seconds to wait for the response
-        :return:
+        :return: True on a success, otherwise False
         """
         send_open = True
         last_time = time.process_time()
@@ -45,10 +68,9 @@ class ArduinoCom(object):
                 send_open = False
                 last_time = time.process_time()
 
-            # allow another try after response_timeout
+            # report a failure after response_timeout
             if time.process_time() - last_time > response_timeout:
-                send_open = True
-                last_time = time.process_time()
+                return False
 
             # read in the string from the Arduino
             if '\n' in buffer_string:
@@ -63,10 +85,8 @@ class ArduinoCom(object):
                     self.location += int(self.last_received[i0:i1])
                     # wrap at total number of steps in a revolution
                     self.location %= self.steps_per_rev
-                buffer_string = lines[-1]
-                # we got the response, enable the next command
-                send_open = True
-                message_sent = True
+                # we got the response, report a success
+                return True
 
     def send_cmd(self, cmd):
         """
@@ -98,10 +118,26 @@ class ArduinoCom(object):
             
     # Low level interfaces functions for ScopeFoundry
     def set_position(self, new_position):
+        """
+        Move the NDW to the given location, relative to the 0 steps position
+        :param new_position: the step location to move to
+        :return: None
+        """
         print("Move to new position", new_position)
+        # find difference
+        move = abs(new_position - self.location) % self.steps_per_rev
+        # correct if taking the long way around
+        if move > self.steps_per_rev // 2:
+            move -= self.steps_per_rev
+        
+        # send the command, raise exception on a failure
+        if not self.ask_cmd("step" + str(move)):
+            raise SteppingError("Command timed out")
         
     def read_current_position(self):
         print("Reading current position")
         return self.location
 
-#x = ArduinoCom(debug=True)
+
+class SteppingError(Exception):
+    pass
