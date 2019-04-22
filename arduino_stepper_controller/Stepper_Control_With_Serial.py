@@ -46,7 +46,7 @@ class ArduinoCom(object):
         :param cmd: the command as a string to send to the Arduino
         ("i" (-∆intensity) for into motor / "o" (+∆intensity) for out of motor directions)
         :param response_timeout: time in seconds to wait for the response
-        :return: True on a success, otherwise False
+        :return: True on a success, otherwise raises an IOError if a response was not received in the timeout period
         """
         send_open = True
         last_time = time.process_time()
@@ -70,7 +70,8 @@ class ArduinoCom(object):
 
             # report a failure after response_timeout
             if time.process_time() - last_time > response_timeout:
-                return False
+                raise IOError("ask_cmd: response was not received in the timeout period,"
+                              " command may not have been sent")
 
             # read in the string from the Arduino
             if '\n' in buffer_string:
