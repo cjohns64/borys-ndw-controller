@@ -30,6 +30,7 @@ class NdwHardwareComponent(HardwareComponent):
         
         # Open connection to hardware
         self.stepper_ctrl = ArduinoCom(debug=self.debug_mode.val)
+        self.stepper_ctrl.start_connection()
         self.stepper_ctrl.set_speed(1)
         
         # connect logged quantities
